@@ -1,18 +1,38 @@
-TOWER LIVE BATTLE v1.3 FIXED
+TOWER LIVE — GIFT WARS v2.1 LIVE READY + PWA
 
-Critical fix:
-- All bottom buttons now use explicit DOM references and addEventListener.
-- The previous build had a JavaScript naming collision: the `gifts` data array shadowed the GIFTS button id, so the tap handler was attached to the array instead of the button.
-- Gift menu, DROP, ROUND, sound and NEXT ROUND are wired independently.
+WHAT IS NEW
+- Installable iPhone/Android PWA: opens from a Home Screen icon in standalone app mode.
+- Portrait orientation metadata and iPhone standalone/status-bar metadata.
+- Offline app-shell cache via Service Worker.
+- Universal public event entry point:
+    window.receiveLiveEvent(event)
+    window.receiveTikTokGift(event)
+- Normalizes username, giftName, giftId, count/repeatCount, coinValue/value and eventId.
+- Event ID de-duplication with bounded/expiring cache.
+- Gift mapping by known gift name/id, with value-tier fallback.
+- Count is safely capped per event.
+- Existing v2.0 visuals, music, destruction, leaderboard, combo and CHAOS systems retained.
 
-Visual/gameplay upgrades:
-- The unexplained thin bottom line is replaced with a clearly styled TOWER BASE platform.
-- Crown, Rocket and Universe now have premium incoming effects.
-- Universe opens a purple portal-like ring.
-- Rocket has an incoming trail plus its existing exhaust.
-- Crown gets a gold entrance ring.
-- Crown/Universe destruction shockwaves have unique styling.
-- Unique gift silhouettes, damage stages, HP strips, rotating debris, sparks, impact flash, screen shake and original background music remain.
-- Controls have explicit z-index and mobile touch-action handling.
+EXAMPLE EVENT
+receiveLiveEvent({
+  eventId: "evt-123",
+  username: "@viewer",
+  giftName: "Rose",
+  giftId: "rose",
+  count: 5,
+  coinValue: 1
+});
 
-TikTok LIVE gift events are still simulated in this prototype.
+IMPORTANT
+This package does NOT contain or invent an unofficial TikTok endpoint.
+Real TikTok LIVE events still require an approved/compatible TikTok LIVE Interactive Games integration or bridge.
+
+INSTALL ON IPHONE
+1. Host these files over HTTPS (your existing GitHub Pages is sufficient).
+2. Open the game URL in Safari.
+3. Share -> Add to Home Screen -> Add.
+4. Launch TOWER LIVE from its icon.
+After the shell is cached, the prototype can reopen offline; real LIVE events require internet.
+
+UPDATE
+When replacing an older hosted version, upload ALL files in this folder, not only index.html.

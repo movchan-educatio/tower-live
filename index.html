@@ -1,6 +1,6 @@
 <!doctype html><html lang="uk"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#050817"><title>TOWER LIVE — GIFT WARS v2.0</title>
+<meta name="theme-color" content="#050817"><title>TOWER LIVE — GIFT WARS v2.1</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050817;color:#fff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 #game{position:relative;width:100%;height:100dvh;overflow:hidden;background:#050817}canvas{display:block;width:100%;height:100%}
@@ -21,8 +21,16 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:
 #achievement{position:absolute;z-index:15;left:50%;top:39%;transform:translate(-50%,-50%) scale(.8);min-width:210px;text-align:center;padding:10px 14px;border:1px solid #ffd86b;border-radius:15px;background:linear-gradient(135deg,#241a08ed,#151027ed);box-shadow:0 0 28px #ffcc5550;opacity:0;transition:.18s;pointer-events:none;font-size:11px;font-weight:800}
 #achievement strong{display:block;font-size:16px;margin-bottom:2px}
 #chaos{position:absolute;z-index:8;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 45%,transparent 0 24%,rgba(125,40,255,.10) 45%,rgba(255,40,110,.13) 100%);transition:opacity .25s}
-</style></head><body><main id="game"><canvas id="c"></canvas>
-<div id="brand">TOWER LIVE <span>GIFT WARS</span></div><div class="hud"><div class="card">🏗️ HEIGHT<br><b id="height">0.0m</b><br><span style="opacity:.55">TOWER LIVE</span></div><div class="card center">⚔️ BATTLE<br><b id="timer">01:30</b></div><div class="card right">💥 KILLS<br><b id="kills">0</b></div></div>
+
+#liveMode{font-size:8px;padding:3px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.2);margin-left:5px;opacity:.85}
+</style><link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#080b16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TOWER LIVE">
+<link rel="apple-touch-icon" href="icon-180.png">
+</head><body><main id="game"><canvas id="c"></canvas>
+<div id="brand">TOWER LIVE <span>GIFT WARS</span> <b id="liveMode">TEST LIVE</b></div><div class="hud"><div class="card">🏗️ HEIGHT<br><b id="height">0.0m</b><br><span style="opacity:.55">TOWER LIVE</span></div><div class="card center">⚔️ BATTLE<br><b id="timer">01:30</b></div><div class="card right">💥 KILLS<br><b id="kills">0</b></div></div>
 <div id="leader"></div><div id="achievement"></div><div id="chaos"></div><div id="banner"></div><div id="kill"></div><button id="start">▶ START BATTLE</button>
 <div id="giftPanel"></div><div id="controls"><button id="gifts">🎁 GIFTS</button><button id="random">⚡ DROP</button><button id="reset">↻ ROUND</button><button id="sound">🔊</button></div>
 <div id="result"><div><div>🏆 ROUND WINNER</div><div class="winner" id="winner"></div><p id="stats"></p><button id="again">NEXT ROUND</button></div></div>
@@ -40,6 +48,77 @@ function resize(){let r=G.getBoundingClientRect(),d=devicePixelRatio||1;C.width=
 function sfx(f=150,d=.07,type='square',v=.035){if(!ac||!sound)return;let o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
 function msg(t){banner.textContent=t;banner.style.opacity=1;banner.style.transform='scale(1.08)';setTimeout(()=>{banner.style.opacity=0;banner.style.transform='scale(.7)'},650)}
 function kmsg(t){kill.textContent=t;kill.style.opacity=1;setTimeout(()=>kill.style.opacity=0,950)}
+
+// ---- TOWER LIVE v2.1 universal LIVE event adapter ----
+const processedLiveEventIds = new Map();
+const LIVE_EVENT_TTL = 10*60*1000;
+function cleanEventCache(){
+  const now=Date.now();
+  for(const [id,t] of processedLiveEventIds) if(now-t>LIVE_EVENT_TTL) processedLiveEventIds.delete(id);
+  if(processedLiveEventIds.size>1500){
+    const arr=[...processedLiveEventIds.entries()].sort((a,b)=>a[1]-b[1]);
+    for(let i=0;i<arr.length-1000;i++) processedLiveEventIds.delete(arr[i][0]);
+  }
+}
+function normalizeLiveEvent(raw={}){
+  const username=String(raw.username||raw.userName||raw.uniqueId||raw.user||'@viewer').trim().slice(0,32);
+  const giftName=String(raw.giftName||raw.name||raw.gift||'Rose').trim();
+  const giftId=String(raw.giftId||raw.id||giftName).trim();
+  const count=Math.max(1,Math.min(50,Number(raw.count||raw.repeatCount||raw.repeat_count||1)||1));
+  const coinValue=Math.max(0,Number(raw.coinValue||raw.diamondCount||raw.value||0)||0);
+  const eventId=String(raw.eventId||raw.event_id||'').trim();
+  return {username:username.startsWith('@')?username:'@'+username,giftName,giftId,count,coinValue,eventId};
+}
+function resolveGift(ev){
+  const q=(ev.giftName+' '+ev.giftId).toLowerCase();
+  const exact=[
+    ['universe',10],['lion',8],['rocket',7],['diamond',6],['crown',5],
+    ['star',4],['cake',3],['bear',3],['donut',2],['coffee',2],['heart',1],['rose',1]
+  ];
+  for(const [key,tier] of exact){
+    if(q.includes(key)){
+      const found=gifts.find(g=>g.id===key||String(g.n).toLowerCase().includes(key));
+      if(found)return found;
+      return gifts.reduce((a,b)=>Math.abs(b.tier-tier)<Math.abs(a.tier-tier)?b:a,gifts[0]);
+    }
+  }
+  const v=ev.coinValue;
+  const tier=v>=1000?10:v>=500?8:v>=200?7:v>=100?6:v>=50?5:v>=20?4:v>=10?3:v>=5?2:1;
+  return gifts.reduce((a,b)=>Math.abs(b.tier-tier)<Math.abs(a.tier-tier)?b:a,gifts[0]);
+}
+function receiveLiveEvent(raw){
+  try{
+    cleanEventCache();
+    const ev=normalizeLiveEvent(raw);
+    if(ev.eventId){
+      if(processedLiveEventIds.has(ev.eventId)) return {ok:false,duplicate:true};
+      processedLiveEventIds.set(ev.eventId,Date.now());
+    }
+    const gift=resolveGift(ev);
+    const capped=Math.min(ev.count,20);
+    for(let i=0;i<capped;i++) setTimeout(()=>drop(gift,ev.username),i*110);
+    document.querySelector('#liveMode').textContent='LIVE EVENT';
+    setTimeout(()=>{const el=document.querySelector('#liveMode');if(el)el.textContent='TEST LIVE'},900);
+    return {ok:true,event:ev,gift:gift.n,spawned:capped};
+  }catch(err){
+    console.error('TOWER LIVE event error',err);
+    return {ok:false,error:String(err&&err.message||err)};
+  }
+}
+window.receiveLiveEvent=receiveLiveEvent;
+window.receiveTikTokGift=receiveLiveEvent;
+
+// Same path used by the built-in simulator, so TEST and future official events share one pipeline.
+function sendTestLiveEvent(gift,user,count=1){
+  return receiveLiveEvent({
+    eventId:'test-'+Date.now()+'-'+Math.random().toString(36).slice(2),
+    username:user||users[Math.random()*users.length|0],
+    giftName:gift.n,
+    giftId:gift.id,
+    count
+  });
+}
+
 function sc(u){return scores[u]||(scores[u]={p:0,k:0,s:0})}
 function achievement(title,sub){
  const a=document.querySelector('#achievement');a.innerHTML=`<strong>${title}</strong>${sub||''}`;
@@ -176,4 +255,8 @@ againBtn.addEventListener('click',reset);
 soundBtn.addEventListener('click',()=>{sound=!sound;soundBtn.textContent=sound?'🔊':'🔇';M.muted=!sound;if(sound&&running)M.play().catch(()=>{})});
 startBtn.addEventListener('click',()=>{ac=new (window.AudioContext||window.webkitAudioContext)();ac.resume();startBtn.style.display='none';reset()});
 requestAnimationFrame(loop);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
 </script></body></html>
