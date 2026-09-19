@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080b18">
+<title>TOWER LIVE — Mobile TikTok Demo</title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;height:100%;overflow:hidden;background:#080b18;color:#fff;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+#wrap{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 320px}
+#stage{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 15%,#233267 0,#111936 35%,#080b18 75%)}
+canvas{width:100%;height:100%;display:block}
+.badge{position:absolute;top:18px;left:50%;transform:translateX(-50%);padding:8px 14px;border:1px solid #5263a8;border-radius:999px;background:#111936cc;font-size:12px;letter-spacing:.12em;white-space:nowrap}
+#hud{position:absolute;top:65px;left:22px}.big{font-size:32px;font-weight:900}.sub{opacity:.7}
+#event{position:absolute;top:120px;left:50%;transform:translateX(-50%);font-weight:900;font-size:25px;text-align:center;text-shadow:0 3px 14px #000;opacity:0;transition:.2s}
+#side{padding:22px;background:#0e1327;border-left:1px solid #273056;overflow:auto}
+h1{font-size:22px;margin:0 0 4px} .accent{color:#74e4ff}.card{background:#171e38;border:1px solid #29345d;border-radius:18px;padding:16px;margin-top:15px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #252e50}.row:last-child{border:0}
+#timer{font-size:32px;font-weight:900}.live{display:inline-flex;gap:7px;align-items:center;font-size:12px;font-weight:800}.dot{width:8px;height:8px;border-radius:50%;background:#ff416c;box-shadow:0 0 10px #ff416c}
+button{width:100%;padding:11px;margin-top:8px;border:0;border-radius:12px;background:#29345d;color:white;font-weight:800;cursor:pointer}button:hover{background:#354270}
+.small{font-size:12px;opacity:.65;line-height:1.45}
+@media(max-width:760px){
+html,body{height:100dvh}
+#wrap{display:block;height:100dvh}
+#stage{height:100dvh}
+#side{display:none}
+.badge{top:max(10px,env(safe-area-inset-top));font-size:10px;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#hud{top:62px;left:14px}.big{font-size:27px}
+#event{top:112px;font-size:20px;width:92%}
+}
+#mobilebar{display:none}
+@media(max-width:760px){
+#mobilebar{display:flex;position:absolute;z-index:20;left:10px;right:10px;bottom:max(12px,env(safe-area-inset-bottom));gap:6px}
+#mobilebar button{margin:0;padding:10px 4px;background:#171e38dd;border:1px solid #354270;font-size:11px}
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+ <main id="stage">
+  <canvas id="c"></canvas>
+  <div class="badge">TIKTOK REVIEW DEMO • SIMULATED LIVE EVENTS</div>
+  <div id="hud"><div class="big"><span id="height">0.0</span> m</div><div class="sub">TOWER HEIGHT • RECORD <span id="record">0.0</span> m</div></div>
+  <div id="event"></div>
+ <div id="mobilebar">
+<button onclick="spawnGift('ROSE')">🌹 ROSE</button>
+<button onclick="spawnGift('GIFT')">🎁 GIFT</button>
+<button onclick="spawnGift('MEGA')">👑 MEGA</button>
+<button onclick="spawnGift('SHIELD')">🛡 SHIELD</button>
+<button onclick="spawnGift('BOMB')">💣 BOMB</button>
+</div>
+ </main>
+ <aside id="side">
+  <div class="live"><span class="dot"></span> LIVE DEMO</div>
+  <h1>TOWER <span class="accent">LIVE</span></h1>
+  <div class="small">Viewers build, protect and disrupt one shared physics tower.</div>
+  <div class="card"><div class="small">ROUND ENDS IN</div><div id="timer">01:30</div></div>
+  <div class="card"><b>TOP CONTRIBUTORS</b><div id="top"></div></div>
+  <div class="card"><b>LIVE EVENT LOG</b><div id="log" class="small"></div></div>
+  <div class="card">
+   <b>Manual demo controls</b>
+   <button onclick="spawnGift('ROSE')">🌹 ROSE</button>
+   <button onclick="spawnGift('GIFT')">🎁 GIFT</button>
+   <button onclick="spawnGift('MEGA')">👑 MEGA</button>
+   <button onclick="spawnGift('SHIELD')">🛡 SHIELD</button>
+   <button onclick="spawnGift('BOMB')">💣 BOMB</button>
+  </div>
+ </aside>
+</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),stage=document.getElementById('stage');
+let W,H,ground,blocks=[],particles=[],record=0,seconds=90,last=performance.now(),acc=0,eventTimer=0;
+const users=['@anna_live','@max_power','@sofia.ua','@vlad_stream','@olena','@mike'];
+const score={}; let uiTimer=0, autoTimer=0;
+function resize(){let r=stage.getBoundingClientRect();c.width=W=Math.floor(r.width*devicePixelRatio);c.height=H=Math.floor(r.height*devicePixelRatio);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);W=r.width;H=r.height;ground=H-55}
+addEventListener('resize',resize);resize();
+function rnd(a,b){return a+Math.random()*(b-a)}
+function notify(t){let e=document.getElementById('event');e.textContent=t;e.style.opacity=1;clearTimeout(eventTimer);eventTimer=setTimeout(()=>e.style.opacity=0,1300)}
+function log(t){let e=document.getElementById('log');e.innerHTML=`<div style="padding:5px 0">${t}</div>`+e.innerHTML;e.innerHTML=e.innerHTML.split('</div>').slice(0,6).join('</div>')}
+function giftData(type){return {ROSE:[72,28,10],GIFT:[105,36,35],MEGA:[155,46,100],BOMB:[58,58,60]}[type]||[80,30,20]}
+function spawnGift(type,user){
+ user=user||users[Math.floor(Math.random()*users.length)];
+ if(type==='SHIELD'){blocks.forEach(b=>{b.vx*=.12;b.vy*=.12;b.av*=.12});score[user]=(score[user]||0)+50;notify(`🛡 ${user} STABILIZED THE TOWER`);log(`🛡 ${user} → SHIELD`);burst(W/2,H/2,18);return}
+ let [w,h,pts]=giftData(type); let x=rnd(W*.30,W*.70); let b={x,y:45,w,h,vx:rnd(-18,18),vy:0,a:rnd(-.08,.08),av:rnd(-.25,.25),user,type};
+ if(type==='BOMB'){b.vx=rnd(-90,90);b.vy=80}
+ blocks.push(b);score[user]=(score[user]||0)+pts;notify(`${type==='ROSE'?'🌹':type==='GIFT'?'🎁':type==='MEGA'?'👑':'💣'} ${user} • ${type}`);log(`${user} → ${type}`);burst(x,55,type==='MEGA'?24:10)
+}
+function burst(x,y,n){for(let i=0;i<n;i++)particles.push({x,y,vx:rnd(-90,90),vy:rnd(-120,20),life:1})}
+function physics(dt){
+ const g=600;
+ for(let b of blocks){b.vy+=g*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.a+=b.av*dt;b.vx*=.997;b.av*=.995;
+  let floor=ground-b.h/2;if(b.y>floor){b.y=floor;b.vy*=-.16;b.vx*=.82;b.av*=.75}
+  if(b.x-b.w/2<8){b.x=8+b.w/2;b.vx=Math.abs(b.vx)*.5} if(b.x+b.w/2>W-8){b.x=W-8-b.w/2;b.vx=-Math.abs(b.vx)*.5}
+ }
+ // simple AABB stacking tuned for stable review demo
+ blocks.sort((a,b)=>b.y-a.y);
+ for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){
+  let a=blocks[i],b=blocks[j]; if(Math.abs(a.x-b.x)<(a.w+b.w)*.42 && b.y+b.h/2>a.y-a.h/2 && b.y<a.y){
+   b.y=a.y-a.h/2-b.h/2; if(b.vy>0)b.vy*=-.05;b.vx*=.88;b.av*=.9;
+  }
+ }
+ particles.forEach(p=>{p.vy+=250*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0)
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle='#202a50';ctx.fillRect(0,ground,W,H-ground);
+ ctx.fillStyle='#42517f';ctx.fillRect(W*.19,ground-10,W*.62,10);
+ for(let b of blocks){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.a);let grad=ctx.createLinearGradient(-b.w/2,0,b.w/2,0);grad.addColorStop(0,b.type==='MEGA'?'#f5c451':b.type==='BOMB'?'#ef5571':'#536ee8');grad.addColorStop(1,b.type==='MEGA'?'#fff0a0':b.type==='BOMB'?'#8e2748':'#79dfff');ctx.fillStyle=grad;roundRect(-b.w/2,-b.h/2,b.w,b.h,8);ctx.fill();ctx.fillStyle='#fff';ctx.font='700 11px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(b.user,0,0);ctx.restore()}
+ for(let p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r)}
+function updateUI(){
+ let topY=ground;for(let b of blocks)topY=Math.min(topY,b.y-b.h/2);let hm=Math.max(0,(ground-topY)/55);record=Math.max(record,hm);
+ document.getElementById('height').textContent=hm.toFixed(1);document.getElementById('record').textContent=record.toFixed(1);
+ let m=Math.floor(seconds/60),s=Math.floor(seconds%60);document.getElementById('timer').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+ let arr=Object.entries(score).sort((a,b)=>b[1]-a[1]).slice(0,3);document.getElementById('top').innerHTML=arr.map((x,i)=>`<div class="row"><span>${['🥇','🥈','🥉'][i]} ${x[0]}</span><b>${x[1]}</b></div>`).join('')||'<div class="small" style="margin-top:8px">Waiting for events…</div>'
+}
+function resetRound(){blocks=[];for(let k in score)delete score[k];seconds=90;notify('NEW ROUND • BUILD THE TALLEST TOWER');log('New round started')}
+function autoEvent(){let r=Math.random(),type=r<.48?'ROSE':r<.72?'GIFT':r<.83?'MEGA':r<.91?'SHIELD':'BOMB';spawnGift(type)}
+function loop(now){let dt=Math.min(.025,(now-last)/1000);last=now;seconds-=dt;if(seconds<=0)resetRound();physics(dt);draw();uiTimer+=dt;autoTimer+=dt;if(uiTimer>.15){updateUI();uiTimer=0}if(autoTimer>rnd(1.1,2.1)){autoEvent();autoTimer=0}requestAnimationFrame(loop)}
+notify('SIMULATED LIVE STARTED');log('Review demo started • events are simulated');requestAnimationFrame(loop);
+</script>
+</body></html>
