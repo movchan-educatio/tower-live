@@ -1,11 +1,18 @@
-TOWER LIVE Mobile v0.7
+TOWER LIVE BATTLE v1.0
 
-Optimized for iPhone/mobile browser and TikTok mobile-game screen broadcasting.
+Mobile browser prototype for TikTok LIVE.
+Open index.html locally on desktop, or upload index.html to GitHub Pages/Vercel for iPhone.
+
+NEW:
+- 12 gift/block classes with tier, HP, damage and points
+- blocks crack before destruction
+- destruction into physical debris + shockwave
+- kills, double/triple kill and domination messages
+- survivor + kill + contribution scoring
+- 90-second rounds and winner screen
+- gift picker
+- simulated users/events
+- generated WebAudio battle music and SFX (tap START BATTLE first on iPhone)
 
 IMPORTANT:
-- This demo uses simulated LIVE events.
-- Real TikTok gifts are not connected yet.
-- For iPhone, host index.html as a normal HTTPS website (GitHub Pages/Vercel).
-- Open the hosted URL in Safari/Chrome, then use TikTok's mobile-game/screen broadcast mode.
-
-The on-screen demo automatically creates Rose/Gift/Mega/Shield/Bomb events.
+TikTok gifts are SIMULATED in this prototype. Real LIVE gift events require an approved/compatible TikTok LIVE integration.
