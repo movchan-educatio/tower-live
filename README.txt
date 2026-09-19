@@ -1,15 +1,18 @@
-TOWER LIVE BATTLE v1.1
+TOWER LIVE BATTLE v1.3 FIXED
 
-What's new:
-- Original generated Tower Live background theme (tower_live_theme.wav), looped during the round.
-- More polished lighting, block gradients and glow.
-- Multi-stage visible cracking based on remaining HP.
-- More debris, sparks, impact rings, white impact flash and camera shake.
-- Smoother physics timestep and impact feedback.
-- 12 gift/block classes with different HP, damage, dimensions and points.
-- Kill chains: Double Kill / Triple Kill / Domination.
-- Sound toggle.
-- Mobile/iPhone layout.
+Critical fix:
+- All bottom buttons now use explicit DOM references and addEventListener.
+- The previous build had a JavaScript naming collision: the `gifts` data array shadowed the GIFTS button id, so the tap handler was attached to the array instead of the button.
+- Gift menu, DROP, ROUND, sound and NEXT ROUND are wired independently.
 
-The music file in this package was generated specifically for this prototype and does not copy a commercial recording.
-TikTok LIVE gift events are still simulated in this build.
+Visual/gameplay upgrades:
+- The unexplained thin bottom line is replaced with a clearly styled TOWER BASE platform.
+- Crown, Rocket and Universe now have premium incoming effects.
+- Universe opens a purple portal-like ring.
+- Rocket has an incoming trail plus its existing exhaust.
+- Crown gets a gold entrance ring.
+- Crown/Universe destruction shockwaves have unique styling.
+- Unique gift silhouettes, damage stages, HP strips, rotating debris, sparks, impact flash, screen shake and original background music remain.
+- Controls have explicit z-index and mobile touch-action handling.
+
+TikTok LIVE gift events are still simulated in this prototype.
