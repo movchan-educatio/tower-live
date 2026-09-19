@@ -1,18 +1,15 @@
-TOWER LIVE BATTLE v1.0
+TOWER LIVE BATTLE v1.1
 
-Mobile browser prototype for TikTok LIVE.
-Open index.html locally on desktop, or upload index.html to GitHub Pages/Vercel for iPhone.
+What's new:
+- Original generated Tower Live background theme (tower_live_theme.wav), looped during the round.
+- More polished lighting, block gradients and glow.
+- Multi-stage visible cracking based on remaining HP.
+- More debris, sparks, impact rings, white impact flash and camera shake.
+- Smoother physics timestep and impact feedback.
+- 12 gift/block classes with different HP, damage, dimensions and points.
+- Kill chains: Double Kill / Triple Kill / Domination.
+- Sound toggle.
+- Mobile/iPhone layout.
 
-NEW:
-- 12 gift/block classes with tier, HP, damage and points
-- blocks crack before destruction
-- destruction into physical debris + shockwave
-- kills, double/triple kill and domination messages
-- survivor + kill + contribution scoring
-- 90-second rounds and winner screen
-- gift picker
-- simulated users/events
-- generated WebAudio battle music and SFX (tap START BATTLE first on iPhone)
-
-IMPORTANT:
-TikTok gifts are SIMULATED in this prototype. Real LIVE gift events require an approved/compatible TikTok LIVE integration.
+The music file in this package was generated specifically for this prototype and does not copy a commercial recording.
+TikTok LIVE gift events are still simulated in this build.
